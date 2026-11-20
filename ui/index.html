@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <title>串口调试工具(作者:心情)</title>
+</head>
+<body>
+  <div id="app">
+    <!-- 顶部菜单标签 -->
+    <div id="menubar">
+      <span class="menu-item" id="menu-options">选项
+        <div id="options-menu" hidden>
+          <label class="chk"><input type="checkbox" id="chk-dark" />暗黑模式</label>
+        </div>
+      </span>
+      <span class="menu-item" id="menu-help" data-tab="serial">帮助
+        <div id="help-menu" hidden>
+          <div class="menu-entry" id="menu-about">关于…</div>
+          <div class="menu-entry" id="menu-license">License…</div>
+        </div>
+      </span>
+      <button id="btn-toggle-right" class="btn small" title="显示/隐藏多条字符串发送区">«»</button>
+    </div>
+
+    <div id="main">
+      <!-- 左侧：接收区 + 发送区 -->
+      <div id="left">
+        <div id="recv-toolbar">
+          <span class="title">接收区</span>
+          <button id="btn-clear-recv" class="btn">清空接收</button>
+          <label class="chk"><input type="checkbox" id="chk-stop-display" />停止显示</label>
+          <label class="chk"><input type="checkbox" id="chk-hex-display" />Hex显示</label>
+          <button id="btn-save-recv" class="btn">保存接收数据</button>
+          <span class="spacer"></span>
+          <span id="rx-count" class="counter rx">接收: 0 字节</span>
+          <span id="tx-count" class="counter tx">发送: 0 字节</span>
+          <button id="btn-zero-count" class="btn small">计数清零</button>
+        </div>
+        <div id="recv-area"></div>
+
+        <div id="send-resizer" title="拖动调整发送区高度"></div>
+        <div id="send-section">
+          <div class="send-title">发送区</div>
+          <textarea id="send-input" placeholder="输入要发送的内容…"></textarea>
+          <div id="send-toolbar">
+            <label class="chk"><input type="checkbox" id="chk-hex-send" />Hex发送</label>
+            <label class="chk"><input type="checkbox" id="chk-newline" />附加换行</label>
+            <select id="sel-newline" title="附加的换行符类型">
+              <option value="lf">\n (LF)</option>
+              <option value="crlf">\r\n (CRLF)</option>
+            </select>
+            <span class="lbl" title="选中后发送时自动在数据末尾附加对应校验值">加校验</span>
+            <select id="sel-checksum" title="选中后发送时自动在数据末尾附加对应校验值">
+              <option value="none">None</option>
+              <option value="modbus16">ModbusCRC16</option>
+              <option value="cdit16">CDIT-CRC16</option>
+              <option value="crc32">CRC32</option>
+              <option value="add8">ADD8</option>
+              <option value="crc8">CRC8</option>
+              <option value="add16">ADD16</option>
+            </select>
+            <label class="chk"><input type="checkbox" id="chk-periodic" />定时发送</label>
+            <input type="text" id="periodic-ms" value="1000" title="定时间隔(ms)" /> <span class="unit">ms</span>
+            <span class="spacer"></span>
+            <button id="btn-clear-send" class="btn">清空发送</button>
+            <button id="btn-send" class="btn primary">发 送</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧：多条字符串发送区 -->
+      <div id="right">
+        <div class="panel-title">多条字符串发送区</div>
+        <div id="multi-toolbar">
+          <button id="btn-multi-add" class="btn small">添加</button>
+          <button id="btn-multi-del" class="btn small" title="删除所有勾选的行">删除选中</button>
+          <button id="btn-multi-clear" class="btn small">清空</button>
+          <button id="btn-multi-load" class="btn small">加载文件</button>
+          <button id="btn-multi-save" class="btn small">保存文件</button>
+          <button id="btn-multi-loop" class="btn small" title="循环发送所有勾选的行，运行期间锁定列表编辑">循环发送</button>
+          <button id="btn-multi-batch" class="btn small" title="按顺序发送所有勾选的行，行间隔为每条自己的间隔">批量发送</button>
+          <input type="file" id="multi-file" accept=".txt" hidden />
+        </div>
+        <div id="multi-list"></div>
+        <div id="multi-hint">格式：内容 [Tab] 间隔ms [Tab] 注释（#开头为注释行）</div>
+      </div>
+    </div>
+
+    <!-- 底部连接配置区 -->
+    <div id="connbar">
+      <div id="conn-row1">
+        <span class="lbl">类型</span>
+        <select id="sel-kind">
+          <option value="serial">串口</option>
+          <option value="tcp_client">TCP客户端</option>
+          <option value="tcp_server">TCP服务端</option>
+          <option value="udp">UDP</option>
+        </select>
+
+        <!-- 串口参数 -->
+        <span class="serial-params kind-params">
+          <span class="lbl">串口号</span>
+          <button id="btn-refresh-ports" class="btn small">刷新端口</button>
+          <select id="sel-port" title="设备对应的 COM 口，插入设备后点「刷新端口」"></select>
+          <span class="lbl">波特率</span>
+          <select id="sel-baud"></select>
+          <span class="lbl">校验</span>
+          <select id="sel-parity">
+            <option value="none">无校验</option>
+            <option value="odd">奇校验</option>
+            <option value="even">偶校验</option>
+          </select>
+          <span class="lbl">数据位</span>
+          <select id="sel-databits">
+            <option value="5">5</option><option value="6">6</option>
+            <option value="7">7</option><option value="8" selected>8</option>
+          </select>
+          <span class="lbl">停止位</span>
+          <select id="sel-stopbits">
+            <option value="1">1</option><option value="1.5">1.5</option><option value="2">2</option>
+          </select>
+        </span>
+
+        <!-- TCP客户端参数 -->
+        <span class="tcpclient-params kind-params" hidden>
+          <span class="lbl">远程IP/域名</span>
+          <input type="text" id="in-remote-host" value="192.168.1.100" />
+          <span class="lbl">远程端口</span>
+          <input type="text" id="in-remote-port" value="8080" />
+        </span>
+
+        <!-- TCP服务端参数 -->
+        <span class="tcpserver-params kind-params" hidden>
+          <span class="lbl">本机IP</span>
+          <select id="sel-local-ip" title="监听的网卡地址：0.0.0.0=所有网卡，127.0.0.1=仅本机访问"></select>
+          <span class="lbl">监听端口</span>
+          <input type="text" id="in-local-port" value="8080" />
+        </span>
+
+        <!-- UDP参数 -->
+        <span class="udp-params kind-params" hidden>
+          <span class="lbl">出口网卡</span>
+          <select id="sel-udp-local-ip" title="UDP 包从哪个网卡发出：0.0.0.0=按路由表自动选择，具体IP=强制从该网卡发出且源地址为它"></select>
+          <span class="lbl">绑定端口</span>
+          <input type="text" id="in-udp-local-port" value="8080" />
+          <span class="sep"></span>
+          <span class="lbl">远程IP/域名</span>
+          <input type="text" id="in-udp-remote-host" value="192.168.1.100" />
+          <span class="lbl">远程端口</span>
+          <input type="text" id="in-udp-remote-port" value="8080" />
+        </span>
+
+        <span class="spacer"></span>
+        <button id="btn-open" class="btn primary big">打开串口</button>
+      </div>
+      <div id="conn-row2">
+        <span id="conn-status" class="status off">● 未连接</span>
+        <span id="udp-peer" class="peer" hidden></span>
+        <span id="kind-hint" class="kind-hint"></span>
+        <span class="spacer"></span>
+        <span id="powered-by" title="联系方式">作者:心情 PowerBy: xinhaojie@foxmail.com</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 通用信息弹窗（关于 / License） -->
+  <div id="modal-mask" hidden>
+    <div id="modal-box">
+      <div id="modal-title"></div>
+      <div id="modal-body"></div>
+      <div id="modal-footer">
+        <button id="modal-close" class="btn small">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

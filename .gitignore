@@ -1,0 +1,21 @@
+# Rust / Tauri 构建产物
+src-tauri/target/
+target/
+
+# Node
+node_modules/
+
+# 本地构建的可执行文件与运行时库（发布产物不入库）
+*.exe
+*.dll
+*.old
+
+# IExpress 打包配置（本地遗留）
+package.sed
+
+# 本地 AI 工作笔记
+.workbuddy/
+
+# 系统文件
+Thumbs.db
+.DS_Store
