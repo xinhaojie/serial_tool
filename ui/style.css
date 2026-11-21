@@ -25,6 +25,8 @@
   --btn-bottom: #ececec;
   --btn-hover-bottom: #e2e2e2;
   --btn-active: #d8d8d8;
+  --menu-hover-bg: #cde9d3;
+  --menu-hover-text: #1d6129;
 }
 
 /* 暗黑主题 */
@@ -49,6 +51,8 @@ body.dark {
   --btn-bottom: #2a2d32;
   --btn-hover-bottom: #3a3e45;
   --btn-active: #22252a;
+  --menu-hover-bg: #2f5a3a;
+  --menu-hover-text: #eaf5ec;
   color-scheme: dark;
 }
 
@@ -74,7 +78,7 @@ body {
   padding: 4px 10px; cursor: pointer; border: 1px solid transparent; border-radius: 3px 3px 0 0;
   transition: background 0.15s ease, color 0.15s ease;
 }
-#menubar .menu-item:hover, #menubar .tab:hover { background: var(--tab-active-bg); color: var(--primary); }
+#menubar .menu-item:hover, #menubar .tab:hover { background: var(--menu-hover-bg); color: var(--menu-hover-text); font-weight: bold; }
 #menubar #btn-toggle-right {
   margin-left: auto;
   padding: 1px 8px;
@@ -123,7 +127,7 @@ body {
   border-radius: 4px;
   transition: background 0.13s ease, color 0.13s ease, padding-left 0.13s ease;
 }
-.menu-entry:hover { background: var(--tab-active-bg); color: var(--primary); padding-left: 18px; }
+.menu-entry:hover { background: var(--menu-hover-bg); color: var(--menu-hover-text); padding-left: 18px; }
 
 /* 通用信息弹窗（关于 / License） */
 #modal-mask {
