@@ -100,7 +100,7 @@ fn open_serial(app: AppHandle, params: &OpenParams) -> Result<Session, String> {
         .map_err(|e| format!("打开 {name} 失败: {e}"))?;
     let reader = port.try_clone().map_err(|e| format!("克隆串口失败: {e}"))?;
 
-    let mut session = Session {
+    let session = Session {
         kind: "serial".into(),
         stop: Arc::new(AtomicBool::new(false)),
         serial: Some(port),
@@ -157,7 +157,7 @@ fn open_tcp_client(app: AppHandle, params: &OpenParams) -> Result<Session, Strin
     let reader = stream.try_clone().map_err(|e| e.to_string())?;
     let peer = stream.peer_addr().map(|a| a.to_string()).unwrap_or_default();
 
-    let mut session = Session {
+    let session = Session {
         kind: "tcp_client".into(),
         stop: Arc::new(AtomicBool::new(false)),
         serial: None,
@@ -202,7 +202,7 @@ fn open_tcp_server(app: AppHandle, params: &OpenParams) -> Result<Session, Strin
     let listener = TcpListener::bind((host.as_str(), port)).map_err(|e| format!("监听 {host}:{port} 失败: {e}"))?;
     listener.set_nonblocking(true).map_err(|e| e.to_string())?;
 
-    let mut session = Session {
+    let session = Session {
         kind: "tcp_server".into(),
         stop: Arc::new(AtomicBool::new(false)),
         serial: None,
@@ -275,7 +275,7 @@ fn open_udp(app: AppHandle, params: &OpenParams) -> Result<Session, String> {
         _ => None,
     };
 
-    let mut session = Session {
+    let session = Session {
         kind: "udp".into(),
         stop: Arc::new(AtomicBool::new(false)),
         serial: None,
@@ -406,18 +406,6 @@ fn list_ports() -> Vec<String> {
         .collect()
 }
 
-#[tauri::command]
-fn local_ip() -> String {
-    if let Ok(s) = UdpSocket::bind("0.0.0.0:0") {
-        if s.connect("8.8.8.8:53").is_ok() {
-            if let Ok(addr) = s.local_addr() {
-                return addr.ip().to_string();
-            }
-        }
-    }
-    "127.0.0.1".into()
-}
-
 /// 枚举所有网卡的 IPv4 地址（多网卡/同网卡多 IP 均可列出），供 TCP服务端/UDP 选择绑定
 #[tauri::command]
 fn local_ips() -> Vec<String> {
@@ -500,7 +488,7 @@ fn relocate_webview2_loader() {
 }
 
 /// 删除本地 dll；因被本进程映射而失败时改名 .old，并启动延迟删除进程
-fn cleanup_local_dll(dir: &Path, local: &Path, bak: &Path) {
+fn cleanup_local_dll(_dir: &Path, local: &Path, bak: &Path) {
     if std::fs::remove_file(local).is_ok() {
         return;
     }
@@ -533,7 +521,7 @@ fn main() {
     relocate_webview2_loader();
     tauri::Builder::default()
         .manage(CommState::default())
-        .invoke_handler(tauri::generate_handler![open, close, send, list_ports, local_ip, local_ips, save_recv_file, app_version])
+        .invoke_handler(tauri::generate_handler![open, close, send, list_ports, local_ips, save_recv_file, app_version])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

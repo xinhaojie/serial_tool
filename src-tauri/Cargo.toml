@@ -1,24 +1,25 @@
 [package]
 name = "serial_tool"
-version = "1.0.1"
+version = "1.1.0"
 edition = "2021"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
+# 关闭 tauri 默认 features：去掉 brotli 压缩(compression)、托盘通用控件(common-controls-v6)、
+# dynamic-acl 等本工具用不到的能力（x11/dbus 为 Linux 专用，Windows 下本就不产生代码）
+tauri = { version = "2", default-features = false, features = ["wry"] }
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
 serialport = "4"
-chrono = "0.4"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 base64 = "0.22"
 if-addrs = "0.15.0"
 rfd = "0.18.0"
 
 [profile.release]
-opt-level = 2
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
 strip = true
-lto = false
-codegen-units = 16
-incremental = true
